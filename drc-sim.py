@@ -424,6 +424,7 @@ def hid_snd():
     button_bits |= hat_mapping_y[hat[1]]
     # 16bit LE array @ 6
     # LX, LY, RX, RY
+    # these numbers are the joystick indecies on the 360 controller according to pygame
     # 0: l stick l/r
     # 1: l stick u/d
     # 2: l trigger
@@ -434,11 +435,13 @@ def hid_snd():
         return int((((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin)
     for i in xrange(6):
         if i in (2, 5):
+            # these "joysticks" are the analog triggers on the 360 controller.
             if joystick.get_axis(i) > 0:
                 button_bits |= trigger_mapping[i]
         else:
+            # these are the real joysticks.
             orig = joystick.get_axis(i)
-            scaled = 0x800
+            scaled = 0x800 # unsure why this starts as this value 0x800
             if abs(orig) > 0.2:
                 if i in (0, 3):
                     scaled = scale_stick(orig, -1, 1, 900, 3200)
@@ -483,6 +486,7 @@ def hid_snd():
     
     report[18 + 7 * 2 + 0] |= ((umi_fw_rev >> 4) & 7) << 12
     
+    ## not my comment. spooky.
     # TODO checkout what's up with | 4
     report[18 + 9 * 2 + 1] |= ((byte_19 & 2) | 4) << 12
     
