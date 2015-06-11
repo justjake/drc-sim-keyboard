@@ -3,8 +3,6 @@
 I forked this from https://bitbucket.org/memahaxx/drc-sim, all credit to the
 original authors.
 
-So far I've added nothing but this README.
-
 ## Goals
 
 keyboard and mouse control for Wii U. Support mouse for "touch" input on the
@@ -21,6 +19,12 @@ gamepad screen as well while in CAPSLOCK or something.
 1. install requirements for drc-sim.py
   - make sure you have libavcodec-dev
 1. run drc-sim.py and enjoy flailing around trying to get the Wii U to do something.
+
+## software architecture
+
+I want to have pluggable control schemes for quick reconfiguration.
+`Control` implements functions for all the Wii U's inputs. We'll read the nice
+public API and from that produce a packed InputData instance in binary.
 
 ## Inspiration
 
