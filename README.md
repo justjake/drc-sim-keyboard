@@ -1,26 +1,45 @@
 # DRC Simulator
 
-I forked this from https://bitbucket.org/memahaxx/drc-sim, all credit to the
-original authors.
+## Credits
+
+I forked from https://bitbucket.org/memahaxx/drc-sim, which does all the hard
+DRC simulator work. all credit to the original authors.
+
+[@delroth_](https://twitter.com/delroth_) was a huge help with connecting to
+the Wii U with wpa_supplicant.
 
 ## Goals
 
 keyboard and mouse control for Wii U. Support mouse for "touch" input on the
 gamepad screen as well while in CAPSLOCK or something.
 
-## Expected Prodedure:
+## Setup
 
 1. get an rt2800usb with 5ghz support.
-1. follow steps described in [this blog post][1] to pair your box with a Wii U.
-  - ignore any usage of mac80211; we don't need the patch for drc-sim
-  - just follow instructions for pairing, no need for netboot or dhcp server.
-  - run `dhclient` on the wifi interface connected to the Wii U to get an IP.
-  - basically just run the wpa_supplicant stuff
+1. follow some of the steps described in [this blog post][1] to pair your box with a Wii U.
+  1. Do the "Preparations" sectio n
+  1. Skip the "mac80211 stack" section! That's for libdrc, not drc-sim.
+  1. Do everything in the "Obtaining the key" step.
+    - the two scripts in this repo can be useful with a bit of customization.
+
+1. Once you have obtained the PSK at the end of "obtaining the key",
+   customize the EXAMPLE-connect-to-the-wiiu.conf with your Wii U's information. You need to fill in:
+    - your BSSID
+    - your PSK
+    - your SSID (possibly)
+1. launch wpa_supplicant again using your new connect-to-wiiu.conf. After a
+   bit you should see wpa_supplicant successfully connect and authenticate.
+1. run `sudo dhclient $WLAN` to get an IP address for your connection from
+   the Wii U.
+
+When you're finished, you should see something like this: [my hooray
+tweet](https://twitter.com/jitl/status/609875855112712193/photo/1)
+
 1. install requirements for drc-sim.py
   - make sure you have libavcodec-dev
 1. run drc-sim.py and enjoy flailing around trying to get the Wii U to do something.
 
-## software architecture
+## software ideas
 
 I want to have pluggable control schemes for quick reconfiguration.
 `Control` implements functions for all the Wii U's inputs. We'll read the nice
