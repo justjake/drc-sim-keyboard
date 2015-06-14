@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
 from os import path
-from Controls import BUTTONS
+from controls.base import BUTTONS
 
 ASSET_ROOT = path.join(path.dirname(path.abspath(__file__)), 'assets')
 ASSET_DICT = {}
@@ -44,36 +44,11 @@ def asset_viewer():
     this is for testing image loading.
     draws all assets to the screen in whatever order we get.
     """
-    pygame.init()
-    pygame.display.set_caption('Asset Viewer')
-    pygame.display.set_mode((1000, 1000))
-    load_all_assets()
-    asset_names = ASSET_DICT.keys()
-
-    # set screen size to always fit the assets
-    BORDER_W = 10
-    BORDER_H = 10
-    max_w = 0
-    max_h = 0
-    for name in asset_names:
-        asset = ASSET_DICT[name]
-        w = asset.get_width()
-        h = asset.get_height()
-        if h > max_h:
-            max_h = h
-        if w > max_w:
-            max_w = w
-    screen = pygame.display.set_mode(
-        (BORDER_W + max_w + BORDER_W,
-         BORDER_H + max_h + BORDER_H)
-    )
-
-    print("width", screen.get_width())
-    print("height", screen.get_height())
-
+    screen, offset = set_up('Asset Viewer')
     font = pygame.font.SysFont("Courier", 40)
 
     # main loop
+    asset_names = ASSET_DICT.keys()
     current_asset = 0
 
     while True:
@@ -81,13 +56,6 @@ def asset_viewer():
         screen.fill(0)
 
         for event in events:
-            if (event.type == KEYDOWN and event.key == K_ESCAPE):
-                pygame.display.quit()
-                return
-
-            elif (event.type == QUIT):
-                pygame.display.quit()
-                return
 
             if (event.type == KEYDOWN and event.key == K_LEFT):
                 current_asset = (current_asset - 1) % len(asset_names)
@@ -96,14 +64,14 @@ def asset_viewer():
                 current_asset = (current_asset + 1) % len(asset_names)
 
         asset = ASSET_DICT[asset_names[current_asset]]
-        screen.blit(asset, (BORDER_W, BORDER_H))
+        screen.blit(asset, offset)
         screen.blit(
             font.render(
                 asset_names[current_asset],
                 True,
                 (255, 255, 255),
                 (0, 0, 0)),
-            (BORDER_W, BORDER_H)
+            offset
         )
 
         pygame.display.flip()
