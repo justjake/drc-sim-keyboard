@@ -127,6 +127,7 @@ class Controls(object):
         return (0, 0, 0)
 
 def build_response(controls):
+    pass
 
 def scale_stick(OldValue, OldMin, OldMax, NewMin, NewMax):
     return int((((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin)
