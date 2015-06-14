@@ -1,8 +1,6 @@
 """
 Abstract keybindings for drc-sim
 """
-import construct
-
 BUTTONS = {
     'SYNC': 0x0001,
     'HOME': 0x0002,
@@ -23,13 +21,6 @@ BUTTONS = {
 }
 
 
-def invoke(obj, method_name):
-    """
-    call method on object
-    """
-    getattr(obj, method_name)()
-
-
 def button_mask(controls):
     """
     Given controls, a `Controls` instance, compute the bitmask of all pressed
@@ -37,25 +28,39 @@ def button_mask(controls):
     """
     mask = 0
     for button_name, button_mask in BUTTONS.iteritems():
-        if invoke(controls, button_name.lower()):
+        if controls.invoke(button_name.lower()):
             mask |= button_mask
     return mask
 
 
 class Controls(object):
     """
+    base class for implementing Wii U control schemes.
+    """
+
+    BUTTON_METHOD_NAMES = map(lambda x: x.lower(), BUTTONS.keys()) + [
+        'l3',
+        'r3',
+        'tv',  # most useless of buttans
+    ]
+
+    def invoke(self, name):
+        return getattr(self, name)()
+
+    """
     buttons. should return True if pressed.
     """
-    def sync(self):
+    # face buttons
+    def a(self):
         return False
 
-    def home(self):
+    def b(self):
         return False
 
-    def minus(self):
+    def x(self):
         return False
 
-    def plus(self):
+    def y(self):
         return False
 
     # triggers
@@ -84,35 +89,41 @@ class Controls(object):
     def left(self):
         return False
 
-    # face buttons
-    def y(self):
+    # start buttons
+    def home(self):
         return False
 
-    def x(self):
+    def minus(self):
         return False
 
-    def b(self):
+    def plus(self):
         return False
 
-    def a(self):
+    # joystick presses
+    def r3(self):
         return False
 
-    # the 'TV' button. Unsure of utility of implementing this.
+    def l3(self):
+        return False
+
+    # extra bullshit. Unsure of utility of implementing these
+    def sync(self):
+        return False
+
     def tv(self):
         return False
 
     """
-    Sticks. Should return an (x :: number, y :: number, clicked :: boolean)
-    tuple. 
+    Sticks. Should return an (x :: number, y :: number) tuple. 
     
     x and y should be in (-1, 1).
     clicked should be true when the stick is pushed in (L3 or R3 in PS3)
     """
     def left_stick(self):
-        return (0, 0, False)
+        return (0, 0)
 
     def right_stick(self):
-        return (0, 0, False)
+        return (0, 0)
 
     """
     should return a tuple (x, y, z) of acceleration, in (-1, 1).
@@ -126,8 +137,12 @@ class Controls(object):
     def gyroscope(self):
         return (0, 0, 0)
 
+
 def build_response(controls):
     pass
 
+
 def scale_stick(OldValue, OldMin, OldMax, NewMin, NewMax):
-    return int((((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin)
+    return int((
+        ((OldValue - OldMin) * (NewMax - NewMin)) /
+        (OldMax - OldMin)) + NewMin)
