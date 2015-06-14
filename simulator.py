@@ -7,13 +7,14 @@ import pygame
 import time
 from H264Decoder import H264Decoder
 
-pygame.init()
-pygame.display.set_mode([854, 480], pygame.RESIZABLE)
-pygame.display.set_caption("drc-sim")
-done = False
-pygame.joystick.init()
-joystick = pygame.joystick.Joystick(0)
-joystick.init()
+from app import App
+from controls.base import button_mask, extra_button_mask
+from controls.wireless import ProMap360
+from controls.keyboard import Keyboard
+from assets import ASSET_DICT
+
+JOYSTICK = False
+EVT_SEND_HID = pygame.USEREVENT
 
 def service_addend(ip):
     if int(ip.split('.')[3]) == 10:
@@ -153,6 +154,7 @@ class ServiceASTRM(ServiceBase):
                 s.is_streaming = True
 
 class ServiceVSTRM(ServiceBase):
+    # TODO rewrite so I can use in render()
     dimensions = {
         'camera' : (640, 480),
         'gamepad' : (854, 480)
@@ -368,173 +370,176 @@ class ServiceNOP(ServiceBase):
     def update(s, packet):
         pass
 
-service_handlers = {
-    MSG_S : ServiceMSG(),
-    VID_S : ServiceVSTRM(),
-    AUD_S : ServiceASTRM(),
-    CMD_S : ServiceCMD()
-}
 
-hid_seq_id = 0
-def hid_snd():
-    global joystick, hid_seq_id
-    
-    report = array.array('H', '\0\0' * 0x40)
-    
-    button_mapping = {
-        0 : 0x4000, # a (mapped to wii u b)
-        1 : 0x8000, # b (mapped to wii u a)
-        2 : 0x1000, # x (mapped to wii u y)
-        3 : 0x2000, # y (mapped to wii u x)
-        4 : 0x0020, # l
-        5 : 0x0010, # r
-        6 : 0x0004, # back (minus)
-        7 : 0x0008, # start (plus)
-        8 : 0x0002, # xbox (home)
-        9 : 0x08, # l3 (goes in extra_buttons)
-       10 : 0x04,  # r3 (goes in extra_buttons)
-       11 : 0x800, # l
-       12 : 0x400, # r
-       14 : 0x100, # d
-       13 : 0x200, # u
-    }
-    hat_mapping_x = {
-        0 : 0x000,
-       -1 : 0x800, # l
-        1 : 0x400, # r
-    }
-    hat_mapping_y = {
-        0 : 0x000,
-       -1 : 0x100, # d
-        1 : 0x200, # u
-    }
-    trigger_mapping = {
-        2 : 0x0080, # l
-        5 : 0x0040  # r
-    }
-    
-    # 16bit LE @ 0 seq_id
-    # seems to be ignored
-    report[0] = hid_seq_id
-    # 16bit @ 2
-    button_bits = 0
-    for i in xrange(14):
-        if joystick.get_button(i):
-            if i == 9 or i == 10:
-                # r3 & l3 go in special buttons
-                pass
-            else:
-                button_bits |= button_mapping[i]
-    # hat: (<l/r>, <u/d>) [-1,1]
-    #hat = joystick.get_hat(0)
-    #button_bits |= hat_mapping_x[hat[0]]
-    #button_bits |= hat_mapping_y[hat[1]]
-    # 16bit LE array @ 6
-    # LX, LY, RX, RY
-    # these numbers are the joystick indecies on the 360 controller according to pygame
-    # 0: l stick l/r
-    # 1: l stick u/d
-    # 2: l trigger
-    # 3: r stick l/r
-    # 4: r stick u/d
-    # 5: r trigger
-    def scale_stick(OldValue, OldMin, OldMax, NewMin, NewMax):
-        return int((((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin)
-    for i in xrange(6):
-        if i in (2, 5):
-            # these "joysticks" are the analog triggers on the 360 controller.
-            if joystick.get_axis(i) > 0:
-                button_bits |= trigger_mapping[i]
+class Simulator(App):
+    """
+    customized DRC simulator using drc-sim-keyboard clases and following pep8
+    """
+    def __init__(self):
+        super(Simulator, self).__init__("DRC Simulator")
+        self.vid_offset = (409, 247)
+
+        if JOYSTICK:
+            # set up joystick
+            pygame.joystick.init()
+            joystick = pygame.joystick.Joystick(0)
+            joystick.init()
+            self.ctlr = ProMap360(joystick)
         else:
-            # these are the real joysticks.
-            orig = joystick.get_axis(i)
+            self.ctlr = Keyboard
+
+        self.service_handlers = {
+            MSG_S: ServiceMSG(),
+            VID_S: ServiceVSTRM(),
+            AUD_S: ServiceASTRM(),
+            CMD_S: ServiceCMD()
+        }
+
+        self._hid_seq_id = 0
+        pygame.time.set_timer(EVT_SEND_HID, int((1. / 180.) * 1000.))
+
+    def seq_id(self):
+        """
+        returns the current hid_seq_id and then increments it.
+        """
+        hid_seq_id = self._hid_seq_id
+        self._hid_seq_id = (hid_seq_id + 1) % 65535  # max unsigned short
+        return hid_seq_id
+
+    def hid_snd(self):
+        report = array.array('H', '\0\0' * 0x40)
+        
+        button_mapping = {
+            0: 0x4000,  # a (mapped to wii u b)
+            1: 0x8000,  # b (mapped to wii u a)
+            2: 0x1000,  # x (mapped to wii u y)
+            3: 0x2000,  # y (mapped to wii u x)
+            4: 0x0020,  # l
+            5: 0x0010,  # r
+            6: 0x0004,  # back (minus)
+            7: 0x0008,  # start (plus)
+            8: 0x0002,  # xbox (home)
+            9: 0x08,    # l3 (goes in extra_buttons)
+            10: 0x04,   # r3 (goes in extra_buttons)
+            11: 0x800,  # l
+            12: 0x400,  # r
+            14: 0x100,  # d
+            13: 0x200,  # u
+        }
+        trigger_mapping = {
+            2: 0x0080,  # l
+            5: 0x0040   # r
+        }
+        
+        # 16bit LE @ 0 seq_id
+        # seems to be ignored
+        report[0] = self.seq_id()
+        # 16bit @ 2
+        button_bits = button_mask(self.ctlr)
+
+        def scale_stick(OldValue, OldMin, OldMax, NewMin, NewMax):
+            return int((((OldValue - OldMin) * (NewMax - NewMin)) / (OldMax - OldMin)) + NewMin)
+
+        def xbox_sensitivity(orig, is_horizontal=True):
+            """
+            given a joystick axis motion, scale into Wii U space
+            """
             scaled = 0x800 # unsure why this starts as this value 0x800
             if abs(orig) > 0.2:
-                if i in (0, 3):
+                if is_horizontal
                     scaled = scale_stick(orig, -1, 1, 900, 3200)
-                elif i in (1, 4):
+                else:
                     scaled = scale_stick(orig, 1, -1, 900, 3200)
             #print '%04i %04i %f' % (i, scaled, orig)
-            stick_mapping = { 0 : 0, 1 : 1, 3 : 2, 4 : 3 }
-            report[3 + stick_mapping[i]] = scaled
-    report[1] = (button_bits >> 8) | ((button_bits & 0xff) << 8)
-    
-    # touchpanel crap @ 36 - 76
-    byte_18 = 0
-    byte_17 = 3
-    byte_9b8 = 0
-    byte_9fd = 6
-    umi_fw_rev = 0x40
-    byte_9fb = 0
-    byte_19 = 2
-    if pygame.mouse.get_pressed()[0]:
-        point = pygame.mouse.get_pos()
-        screen_x, screen_y = pygame.display.get_surface().get_size()
-        x = scale_stick(point[0], 0, screen_x, 200, 3800)
-        y = scale_stick(point[1], 0, screen_y, 200, 3800)
-        z1 = 2000
-        
-        for i in xrange(10):
-            report[18 + i * 2 + 0] = 0x80 | x
-            report[18 + i * 2 + 1] = 0x80 | y
-        
-        report[18 + 0 * 2 + 0] |= ((z1 >> 0) & 7) << 12
-        report[18 + 0 * 2 + 1] |= ((z1 >> 3) & 7) << 12
-        report[18 + 1 * 2 + 0] |= ((z1 >> 6) & 7) << 12
-        report[18 + 1 * 2 + 1] |= ((z1 >> 9) & 7) << 12
-    
-    report[18 + 3 * 2 + 1] |= ((byte_17 >> 0) & 7) << 12
-    report[18 + 4 * 2 + 0] |= ((byte_17 >> 3) & 7) << 12
-    report[18 + 4 * 2 + 1] |= ((byte_17 >> 6) & 3) << 12
-    
-    report[18 + 5 * 2 + 0] |= ((byte_9fd >> 0) & 7) << 12
-    report[18 + 5 * 2 + 1] |= ((byte_9fd >> 3) & 7) << 12
-    report[18 + 6 * 2 + 0] |= ((byte_9fd >> 6) & 3) << 12
-    
-    report[18 + 7 * 2 + 0] |= ((umi_fw_rev >> 4) & 7) << 12
-    
-    ## not my comment. spooky.
-    # TODO checkout what's up with | 4
-    report[18 + 9 * 2 + 1] |= ((byte_19 & 2) | 4) << 12
-    
-    # 8bit @ 80
-    # i didn't want to move this up because I'm
-    # worried its location here is important. TODO
-    # think about it.
-    for i in xrange(9,11):
-        if joystick.get_button(i):
-            report[40] |= button_mapping[i]
-    
-    report[0x3f] = 0xe000
-    #print report.tostring().encode('hex')
-    HID_S.sendto(report, ('192.168.1.10', PORT_HID))
-    hid_seq_id = hid_seq_id + 1 % 65534 # prevent overflow
+            return scaled
 
-EVT_SEND_HID = pygame.USEREVENT
-pygame.time.set_timer(EVT_SEND_HID, int((1. / 180.) * 1000.))
+        l_horiz, l_vert = self.ctlr.left_stick()
+        r_horiz, r_vert = self.ctlr.right_stick()
+        report[3 + 0] = xbox_sensitivity(l_horiz)
+        report[3 + 1] = xbox_sensitivity(l_vert, false)
+        report[3 + 2] = xbox_sensitivity(r_horiz)
+        report[3 + 3] = xbox_sensitivity(r_vert, false)
 
-while not done:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            done = True
-        elif event.type == pygame.VIDEORESIZE:
-            pygame.display.set_mode(event.size, pygame.RESIZABLE)
-            service_handlers[VID_S].resize_output(event.size)
-        elif event.type == pygame.KEYDOWN:
+        report[1] = (button_bits >> 8) | ((button_bits & 0xff) << 8)
+        
+        # touchpanel crap @ 36 - 76
+        byte_18 = 0
+        byte_17 = 3
+        byte_9b8 = 0
+        byte_9fd = 6
+        umi_fw_rev = 0x40
+        byte_9fb = 0
+        byte_19 = 2
+        if pygame.mouse.get_pressed()[0]:
+            point = pygame.mouse.get_pos()
+            screen_x, screen_y = pygame.display.get_surface().get_size()
+            x = scale_stick(point[0], 0, screen_x, 200, 3800)
+            y = scale_stick(point[1], 0, screen_y, 200, 3800)
+            z1 = 2000
+            
+            for i in xrange(10):
+                report[18 + i * 2 + 0] = 0x80 | x
+                report[18 + i * 2 + 1] = 0x80 | y
+            
+            report[18 + 0 * 2 + 0] |= ((z1 >> 0) & 7) << 12
+            report[18 + 0 * 2 + 1] |= ((z1 >> 3) & 7) << 12
+            report[18 + 1 * 2 + 0] |= ((z1 >> 6) & 7) << 12
+            report[18 + 1 * 2 + 1] |= ((z1 >> 9) & 7) << 12
+        
+        report[18 + 3 * 2 + 1] |= ((byte_17 >> 0) & 7) << 12
+        report[18 + 4 * 2 + 0] |= ((byte_17 >> 3) & 7) << 12
+        report[18 + 4 * 2 + 1] |= ((byte_17 >> 6) & 3) << 12
+        
+        report[18 + 5 * 2 + 0] |= ((byte_9fd >> 0) & 7) << 12
+        report[18 + 5 * 2 + 1] |= ((byte_9fd >> 3) & 7) << 12
+        report[18 + 6 * 2 + 0] |= ((byte_9fd >> 6) & 3) << 12
+        
+        report[18 + 7 * 2 + 0] |= ((umi_fw_rev >> 4) & 7) << 12
+        
+        ## not my comment. spooky.
+        # TODO checkout what's up with | 4
+        report[18 + 9 * 2 + 1] |= ((byte_19 & 2) | 4) << 12
+        
+        # 8bit @ 80
+        # i didn't want to move this up because I'm
+        # worried its location here is important. TODO
+        # think about it.
+        report[40] |= extra_button_mask(self.ctlr)
+        
+        report[0x3f] = 0xe000
+        #print report.tostring().encode('hex')
+        HID_S.sendto(report, ('192.168.1.10', PORT_HID))
+
+    def handle_event(self, event):
+        self.quit_if_needed(event)
+
+        if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSLASH:
                 MSG_S.sendto('\1\0\0\0', ('192.168.1.10', PORT_MSG))
+
         elif event.type == EVT_SEND_HID:
-            hid_snd()
-    
-    rlist, wlist, xlist = select.select(service_handlers.keys(), (), (), 1)
-    
-    if not rlist:
-        continue
-    
-    for sock in rlist:
-        service_handlers[sock].update(sock.recvfrom(2048)[0])
+            self.hid_snd()
 
-for s in service_handlers.itervalues():
-    s.close()
+    def render(self):
+        rlist, wlist, xlist = select.select(
+            self.service_handlers.keys(), (), (), 1)
+        
+        if not rlist:
+            return
+        
+        for sock in rlist:
+            service_handlers[sock].update(sock.recvfrom(2048)[0])
 
-pygame.quit()
+        # let's paint the controller too, on top of the video, because fuck me
+        self.screen.blit(self.bg, self.offset)
+        for button in self.ctlr.BUTTON_METHOD_NAMES:
+            if self.ctlr.invoke(button):
+                self.screen.blit(ASSET_DICT[button], self.offset)
+
+    def clean_up(self):
+        for s in self.service_handlers.itervalues():
+            s.close()
+
+if __name__ == '__main__':
+    app = Simulator()
+    app.main()
