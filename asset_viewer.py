@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
 from app import App 
-from asset_manager import ASSET_DICT
+from assets import ASSET_DICT
 
 
 class AssetViewer(App):

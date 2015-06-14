@@ -1,5 +1,5 @@
 import pygame
-from asset_manager import ASSET_DICT, load_all_assets
+from assets import ASSET_DICT, load_all_assets
 
 
 class ExitMain(StandardError):

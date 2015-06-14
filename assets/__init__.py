@@ -3,7 +3,7 @@ from pygame.locals import *
 from os import path
 from controls.base import BUTTONS
 
-ASSET_ROOT = path.join(path.dirname(path.abspath(__file__)), 'assets')
+ASSET_ROOT = path.join(path.dirname(path.abspath(__file__)), 'asset_files')
 ASSET_DICT = {}
 
 
