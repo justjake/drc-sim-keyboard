@@ -382,10 +382,10 @@ def hid_snd():
     report = array.array('H', '\0\0' * 0x40)
     
     button_mapping = {
-        0 : 0x8000, # a
-        1 : 0x4000, # b
-        2 : 0x2000, # x
-        3 : 0x1000, # y
+        0 : 0x4000, # a (mapped to wii u b)
+        1 : 0x8000, # b (mapped to wii u a)
+        2 : 0x1000, # x (mapped to wii u y)
+        3 : 0x2000, # y (mapped to wii u x)
         4 : 0x0020, # l
         5 : 0x0010, # r
         6 : 0x0004, # back (minus)
