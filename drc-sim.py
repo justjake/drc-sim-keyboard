@@ -391,9 +391,12 @@ def hid_snd():
         6 : 0x0004, # back (minus)
         7 : 0x0008, # start (plus)
         8 : 0x0002, # xbox (home)
-        # extra buttons
-        9 : 0x08, # l3
-       10 : 0x04  # r3
+        9 : 0x08, # l3 (goes in extra_buttons)
+       10 : 0x04,  # r3 (goes in extra_buttons)
+       11 : 0x800, # l
+       12 : 0x400, # r
+       14 : 0x100, # d
+       13 : 0x200, # u
     }
     hat_mapping_x = {
         0 : 0x000,
@@ -415,13 +418,17 @@ def hid_snd():
     report[0] = hid_seq_id
     # 16bit @ 2
     button_bits = 0
-    for i in xrange(9):
+    for i in xrange(14):
         if joystick.get_button(i):
-            button_bits |= button_mapping[i]
+            if i == 9 or i == 10:
+                # r3 & l3 go in special buttons
+                pass
+            else:
+                button_bits |= button_mapping[i]
     # hat: (<l/r>, <u/d>) [-1,1]
-    hat = joystick.get_hat(0)
-    button_bits |= hat_mapping_x[hat[0]]
-    button_bits |= hat_mapping_y[hat[1]]
+    #hat = joystick.get_hat(0)
+    #button_bits |= hat_mapping_x[hat[0]]
+    #button_bits |= hat_mapping_y[hat[1]]
     # 16bit LE array @ 6
     # LX, LY, RX, RY
     # these numbers are the joystick indecies on the 360 controller according to pygame
@@ -491,6 +498,9 @@ def hid_snd():
     report[18 + 9 * 2 + 1] |= ((byte_19 & 2) | 4) << 12
     
     # 8bit @ 80
+    # i didn't want to move this up because I'm
+    # worried its location here is important. TODO
+    # think about it.
     for i in xrange(9,11):
         if joystick.get_button(i):
             report[40] |= button_mapping[i]
@@ -498,7 +508,7 @@ def hid_snd():
     report[0x3f] = 0xe000
     #print report.tostring().encode('hex')
     HID_S.sendto(report, ('192.168.1.10', PORT_HID))
-    hid_seq_id += 1
+    hid_seq_id = hid_seq_id + 1 % 65534 # prevent overflow
 
 EVT_SEND_HID = pygame.USEREVENT
 pygame.time.set_timer(EVT_SEND_HID, int((1. / 180.) * 1000.))
