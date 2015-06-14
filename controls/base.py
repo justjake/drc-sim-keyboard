@@ -20,6 +20,11 @@ BUTTONS = {
     'A': 0x8000
 }
 
+EXTRA_BOTTOMS = {
+    'L3': 0x08,
+    'R3': 0x04,
+}
+
 
 def button_mask(controls):
     """
@@ -28,6 +33,14 @@ def button_mask(controls):
     """
     mask = 0
     for button_name, button_mask in BUTTONS.iteritems():
+        if controls.invoke(button_name.lower()):
+            mask |= button_mask
+    return mask
+
+
+def extra_button_mask(controls):
+    mask = 0
+    for button_name, button_mask in EXTRA_BOTTOMS.iteritems():
         if controls.invoke(button_name.lower()):
             mask |= button_mask
     return mask
