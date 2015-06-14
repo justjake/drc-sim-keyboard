@@ -70,6 +70,9 @@ class App(object):
         """
         self.screen.fill(0)
 
+    def clean_up(self):
+        pass
+
     def main(self):
         while True:
             try:
@@ -78,4 +81,5 @@ class App(object):
                 pygame.display.flip()
             except ExitMain:
                 break
+        self.clean_up()
         pygame.display.quit()
