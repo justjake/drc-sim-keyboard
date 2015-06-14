@@ -37,12 +37,11 @@ tweet](https://twitter.com/jitl/status/609875855112712193/photo/1)
 
 ## Set up drc-sym (untested)
 
-1. `sudo pip install -r ./requirements.txt`
-1. `wget https://people.csail.mit.edu/hubert/pyaudio/packages/python-pyaudio_0.2.8-1_amd64.deb`
-1. `sudo dpkg -i ./python-pyaudio*.deb`
-
-I'm not sure if we should follow "Installing ffmpeg and patched H.264 codec" on
-[the fiendly blog post][1].
+1. Read over install-requirements.sh and decide how you want to install
+   everything. install-requirements.sh was written for Debian Jessie, but
+   should also work just fine on Ubuntu systems.
+1. run `./install-requirements.sh`
+1. Plug in a wireless Xbox 360 controller receiver.
 
 ## software ideas
 
