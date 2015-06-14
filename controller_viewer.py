@@ -39,7 +39,7 @@ def load_all_assets():
         ASSET_DICT[gamepad_asset_names[i]] = load_png(gamepad_asset_files[i])
 
 
-def main():
+def asset_viewer():
     """
     this is for testing image loading.
     draws all assets to the screen in whatever order we get.
@@ -71,6 +71,8 @@ def main():
     print("width", screen.get_width())
     print("height", screen.get_height())
 
+    font = pygame.font.SysFont("Courier", 40)
+
     # main loop
     current_asset = 0
 
@@ -95,7 +97,16 @@ def main():
 
         asset = ASSET_DICT[asset_names[current_asset]]
         screen.blit(asset, (BORDER_W, BORDER_H))
+        screen.blit(
+            font.render(
+                asset_names[current_asset],
+                True,
+                (255, 255, 255),
+                (0, 0, 0)),
+            (BORDER_W, BORDER_H)
+        )
+
         pygame.display.flip()
 
 if __name__ == '__main__':
-    main()
+    asset_viewer()
