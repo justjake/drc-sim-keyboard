@@ -29,7 +29,9 @@ def load_all_assets():
         'screen-x409-y247',
         'l3',
         'r3',
-        'gamepad'
+        'gamepad',
+        'stick-field',
+        'point'
     ]
     gamepad_asset_names = buttons + other_gamepad_images
     gamepad_asset_files = map(
