@@ -11,7 +11,11 @@ class MouseJoystick(object):
         self.sensitivity_incr = 10
         self.max = 100.0
         # this is really weird. blame VirtualBox?
-        self.max_locked = 25000.0
+        # self.max_locked = 25000.0
+        
+        # set to the more reasonable 100.0 because most people aren't running
+        # their simulator in VirtualBox
+        self.max_locked = self.max
 
     def handle_event(self, event):
         """
