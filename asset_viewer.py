@@ -14,7 +14,7 @@ class AssetViewer(App):
 
         self.font = pygame.font.SysFont("Courier", 40)
         self.current_asset = 0
-        self.asset_names = ASSET_DICT.keys()
+        self.asset_names = sorted(ASSET_DICT.keys())
 
     def handle_event(self, event):
         self.quit_if_needed(event)
