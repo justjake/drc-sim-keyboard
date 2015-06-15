@@ -82,6 +82,7 @@ class ControllerViewer(JoystickVisualizer, ButtonVisualizer, App):
         self.ctlr.handle_event(event)
 
     def render(self):
+        self.screen.fill((44, 44, 44))
         super(ControllerViewer, self).render()
         self.screen.blit(self.bg, self.offset)
 

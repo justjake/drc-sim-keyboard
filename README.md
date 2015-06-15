@@ -1,5 +1,7 @@
 # DRC Simulator
 
+![the controller viewer](screenshot.png)
+
 ## Credits
 
 I forked from https://bitbucket.org/memahaxx/drc-sim, which does all the hard
@@ -31,17 +33,25 @@ gamepad screen as well while in CAPSLOCK or something.
    bit you should see wpa_supplicant successfully connect and authenticate.
 1. run `sudo dhclient $WLAN` to get an IP address for your connection from
    the Wii U.
+1. To make switching between the Gamepad and your computer easier, you can set
+   your wireless adapter's MAC address to be that of your Gamepad.
 
 When you're finished, you should see something like this: [my hooray
 tweet](https://twitter.com/jitl/status/609875855112712193/photo/1)
 
-## Set up drc-sym (untested)
+## Set up simulator.py
+
+Note that the new simulator has a controller viewer, but doesn't have video
+streaming yet! Mostly because I'm bad at programming.
 
 1. Read over install-requirements.sh and decide how you want to install
    everything. install-requirements.sh was written for Debian Jessie, but
    should also work just fine on Ubuntu systems.
 1. run `./install-requirements.sh`
-1. Plug in a wireless Xbox 360 controller receiver.
+1. set `JOYSTICK = true` in `simulator.py if you've got an Xbox 360 controller.
+   Otherwise you're stuck with just a keyboard and mouse
+1. run `simulator.py` for mouse support.
+   run `drc-sim.py` for video streaming.
 
 ## software ideas
 
