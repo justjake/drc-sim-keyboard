@@ -140,5 +140,6 @@ class H264Decoder:
                 s.ffi.buffer(s.out_frame.data[0], s.out_frame.linesize[0] * s.out_y),
                 (s.out_x, s.out_y),
                 'RGB')
-            pygame.display.get_surface().blit(surface, (0, 0))
-            pygame.display.flip()
+            # pygame.display.get_surface().blit(surface, (0, 0))
+            pygame.display.get_surface().blit(surface, (409, 247))
+            # pygame.display.flip()
