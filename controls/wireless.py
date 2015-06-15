@@ -83,13 +83,12 @@ class Xbox360Wireless(Controls):
     Sticks. Should return an (x :: number, y :: number) tuple. 
     
     x and y should be in (-1, 1).
-    clicked should be true when the stick is pushed in (L3 or R3 in PS3)
     """
     def left_stick(self):
-        return (0, 0)
+        return (self.joy.get_axis(0), self.joy.get_axis(1))
 
     def right_stick(self):
-        return (0, 0)
+        return (self.joy.get_axis(3), self.joy.get_axis(4))
 
     """
     should return a tuple (x, y, z) of acceleration, in (-1, 1).
