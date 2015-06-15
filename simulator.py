@@ -9,11 +9,11 @@ from H264Decoder import H264Decoder
 
 from app import App
 from controls.base import button_mask, extra_button_mask
-from controls.wireless import ProMap360
+from controls.wireless import ProMap360, Xbox360Wireless
 from controls.keyboard import Keyboard
 from assets import ASSET_DICT
 
-JOYSTICK = False
+JOYSTICK = True
 EVT_SEND_HID = pygame.USEREVENT
 
 def service_addend(ip):
@@ -378,15 +378,23 @@ class Simulator(App):
     def __init__(self):
         super(Simulator, self).__init__("DRC Simulator")
         self.vid_offset = (409, 247)
+        self.bg = ASSET_DICT['gamepad']
+        self.bg.fill(
+                (0,0,0,0),  # transparent
+                pygame.Rect(
+                    self.vid_offset,
+                    (854, 480))
+                )
 
         if JOYSTICK:
             # set up joystick
             pygame.joystick.init()
             joystick = pygame.joystick.Joystick(0)
             joystick.init()
+            # self.ctlr = Xbox360Wireless(joystick)
             self.ctlr = ProMap360(joystick)
         else:
-            self.ctlr = Keyboard
+            self.ctlr = Keyboard()
 
         self.service_handlers = {
             MSG_S: ServiceMSG(),
@@ -446,7 +454,7 @@ class Simulator(App):
             """
             scaled = 0x800 # unsure why this starts as this value 0x800
             if abs(orig) > 0.2:
-                if is_horizontal
+                if is_horizontal:
                     scaled = scale_stick(orig, -1, 1, 900, 3200)
                 else:
                     scaled = scale_stick(orig, 1, -1, 900, 3200)
@@ -456,9 +464,9 @@ class Simulator(App):
         l_horiz, l_vert = self.ctlr.left_stick()
         r_horiz, r_vert = self.ctlr.right_stick()
         report[3 + 0] = xbox_sensitivity(l_horiz)
-        report[3 + 1] = xbox_sensitivity(l_vert, false)
+        report[3 + 1] = xbox_sensitivity(l_vert, False)
         report[3 + 2] = xbox_sensitivity(r_horiz)
-        report[3 + 3] = xbox_sensitivity(r_vert, false)
+        report[3 + 3] = xbox_sensitivity(r_vert, False)
 
         report[1] = (button_bits >> 8) | ((button_bits & 0xff) << 8)
         
@@ -528,8 +536,11 @@ class Simulator(App):
             return
         
         for sock in rlist:
-            service_handlers[sock].update(sock.recvfrom(2048)[0])
+            self.service_handlers[sock].update(sock.recvfrom(2048)[0])
 
+        # video won't paint with the controller there?
+        # so draw black for now
+        #self.screen.fill(55)
         # let's paint the controller too, on top of the video, because fuck me
         self.screen.blit(self.bg, self.offset)
         for button in self.ctlr.BUTTON_METHOD_NAMES:
