@@ -4,6 +4,7 @@ from app import App
 from assets import ASSET_DICT
 from controls.keyboard import Keyboard
 from controls.base import scale
+from controls.mouse import KeyboardMouse
 
 
 def add(a, b):
@@ -57,6 +58,7 @@ class ControllerViewer(App):
 
     def handle_event(self, event):
         self.quit_if_needed(event)
+        self.ctlr.handle_event(event)
 
     def render(self):
         super(ControllerViewer, self).render()
@@ -72,4 +74,4 @@ class ControllerViewer(App):
         # print('right_stick', self.ctlr.right_stick())
 
 if __name__ == '__main__':
-    ControllerViewer(Keyboard()).main()
+    ControllerViewer(KeyboardMouse()).main()

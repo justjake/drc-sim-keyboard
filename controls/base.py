@@ -150,15 +150,20 @@ class Controls(object):
     def gyroscope(self):
         return (0, 0, 0)
 
+    def handle_event(self, event):
+        """
+        override if you wish to handle events with your controller
+        """
+        pass
+
 
 def build_response(controls):
     pass
 
 
 def scale(OldValue, OldMin, OldMax, NewMin, NewMax):
-    return int((
-        ((OldValue - OldMin) * (NewMax - NewMin)) /
-        (OldMax - OldMin)) + NewMin)
+    return (((OldValue - OldMin) * (NewMax - NewMin)) /
+            (OldMax - OldMin) + NewMin)
 
 
 def add(point_a, point_b):
