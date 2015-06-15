@@ -155,7 +155,11 @@ def build_response(controls):
     pass
 
 
-def scale_stick(OldValue, OldMin, OldMax, NewMin, NewMax):
+def scale(OldValue, OldMin, OldMax, NewMin, NewMax):
     return int((
         ((OldValue - OldMin) * (NewMax - NewMin)) /
         (OldMax - OldMin)) + NewMin)
+
+
+def add(point_a, point_b):
+    return (point_a[0] + point_b[0], point_a[1] + point_b[1])

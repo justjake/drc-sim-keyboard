@@ -1,6 +1,17 @@
-from base import Controls
+from base import Controls, add
 import pygame
 from pygame.locals import *
+
+
+def make_joy_emu(mapping):
+    def get():
+        pos = (0, 0)
+        pressed = pygame.key.get_pressed()
+        for key, vector in mapping.iteritems():
+            if pressed[key]:
+                pos = add(pos, vector)
+        return pos
+    return get
 
 
 class Keyboard(Controls):
@@ -11,6 +22,21 @@ class Keyboard(Controls):
     """
     def key(self, name):
         return pygame.key.get_pressed()[name]
+
+    def __init__(self):
+        self.lstick = make_joy_emu({
+            K_w: (0, 1),
+            K_s: (0, -1),
+            K_a: (-1, 0),
+            K_d: (1, 0),
+        })
+
+        self.rstick = make_joy_emu({
+            K_UP: (0, 1),
+            K_DOWN: (0, -1),
+            K_LEFT: (-1, 0),
+            K_RIGHT: (1, 0),
+        })
 
     # face buttons
     def a(self):
@@ -67,3 +93,9 @@ class Keyboard(Controls):
 
     def l3(self):
         return False
+
+    def left_stick(self):
+        return self.lstick()
+
+    def right_stick(self):
+        return self.rstick()
