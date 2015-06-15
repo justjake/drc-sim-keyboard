@@ -79,16 +79,27 @@ class Xbox360Wireless(Controls):
     def tv(self):
         return False
 
+    def threshold(self, stick_axis):
+        if stick_axis < 0.2:
+            return 0.0
+        return stick_axis
+
     """
     Sticks. Should return an (x :: number, y :: number) tuple. 
     
     x and y should be in (-1, 1).
     """
     def left_stick(self):
-        return (self.joy.get_axis(0), self.joy.get_axis(1))
+        return (
+                self.threshold(self.joy.get_axis(0)), 
+                self.threshold(self.joy.get_axis(1)) * -1
+                )
 
     def right_stick(self):
-        return (self.joy.get_axis(3), self.joy.get_axis(4))
+        return (
+                self.threshold(self.joy.get_axis(3)), 
+                self.threshold(self.joy.get_axis(4)) * -1
+                    )
 
     """
     should return a tuple (x, y, z) of acceleration, in (-1, 1).

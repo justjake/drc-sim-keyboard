@@ -8,10 +8,12 @@ import time
 from H264Decoder import H264Decoder
 
 from app import App
-from controls.base import button_mask, extra_button_mask
+from controls.base import button_mask, extra_button_mask, UnionController
 from controls.wireless import ProMap360, Xbox360Wireless
 from controls.keyboard import Keyboard
+from controls.mouse import KeyboardMouse
 from assets import ASSET_DICT
+from controller_viewer import JoystickVisualizer, ButtonVisualizer
 
 JOYSTICK = True
 EVT_SEND_HID = pygame.USEREVENT
@@ -371,7 +373,7 @@ class ServiceNOP(ServiceBase):
         pass
 
 
-class Simulator(App):
+class Simulator(JoystickVisualizer, ButtonVisualizer, App):
     """
     customized DRC simulator using drc-sim-keyboard clases and following pep8
     """
@@ -386,15 +388,18 @@ class Simulator(App):
                     (854, 480))
                 )
 
+        controllers = []
+
         if JOYSTICK:
             # set up joystick
             pygame.joystick.init()
             joystick = pygame.joystick.Joystick(0)
             joystick.init()
             # self.ctlr = Xbox360Wireless(joystick)
-            self.ctlr = ProMap360(joystick)
-        else:
-            self.ctlr = Keyboard()
+            controllers.append(ProMap360(joystick))
+
+        controllers.append(KeyboardMouse())
+        self.ctlr = UnionController(controllers)
 
         self.service_handlers = {
             MSG_S: ServiceMSG(),
@@ -453,11 +458,11 @@ class Simulator(App):
             given a joystick axis motion, scale into Wii U space
             """
             scaled = 0x800 # unsure why this starts as this value 0x800
-            if abs(orig) > 0.2:
-                if is_horizontal:
-                    scaled = scale_stick(orig, -1, 1, 900, 3200)
-                else:
-                    scaled = scale_stick(orig, 1, -1, 900, 3200)
+            if abs(orig) > 0.01:
+                # if is_horizontal:
+                scaled = scale_stick(orig, -1, 1, 900, 3200)
+                # else:
+                    # scaled = scale_stick(orig, 1, -1, 900, 3200)
             #print '%04i %04i %f' % (i, scaled, orig)
             return scaled
 
@@ -520,6 +525,7 @@ class Simulator(App):
 
     def handle_event(self, event):
         self.quit_if_needed(event)
+        self.ctlr.handle_event(event)
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSLASH:
@@ -529,6 +535,10 @@ class Simulator(App):
             self.hid_snd()
 
     def render(self):
+        self.screen.fill(15)
+        self.screen.blit(self.bg, self.offset)
+        super(Simulator, self).render()
+
         rlist, wlist, xlist = select.select(
             self.service_handlers.keys(), (), (), 1)
         
@@ -542,10 +552,6 @@ class Simulator(App):
         # so draw black for now
         #self.screen.fill(55)
         # let's paint the controller too, on top of the video, because fuck me
-        self.screen.blit(self.bg, self.offset)
-        for button in self.ctlr.BUTTON_METHOD_NAMES:
-            if self.ctlr.invoke(button):
-                self.screen.blit(ASSET_DICT[button], self.offset)
 
     def clean_up(self):
         for s in self.service_handlers.itervalues():

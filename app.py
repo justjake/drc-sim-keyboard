@@ -68,7 +68,8 @@ class App(object):
         """
         run each frame.
         """
-        self.screen.fill(0)
+        # self.screen.fill(0)
+        pass
 
     def clean_up(self):
         pass

@@ -9,7 +9,7 @@ class MouseJoystick(object):
         # always added to the "max" movement
         self.sensitivity = 0
         self.sensitivity_incr = 10
-        self.max = 100.0
+        self.max = 75.0
         # this is really weird. blame VirtualBox?
         # self.max_locked = 25000.0
         
@@ -57,6 +57,9 @@ class MouseJoystick(object):
                   -(maximum + self.sensitivity),
                   maximum + self.sensitivity, 
                   1.0, -1.0)
+
+        x = max(min(1.0, x), -1.0)
+        y = max(min(1.0, y), -1.0)
         return (x, y)
 
     def lock(self):
@@ -87,3 +90,12 @@ class KeyboardMouse(Keyboard):
         handle events here so the mouse can adjust sensitivity
         """
         self.mouse.handle_event(event)
+
+    def r(self):
+        return pygame.mouse.get_pressed()[2]
+
+    def zr(self):
+        return pygame.mouse.get_pressed()[0]
+
+    def r3(self):
+        return pygame.mouse.get_pressed()[1]

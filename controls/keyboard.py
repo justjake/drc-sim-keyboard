@@ -46,10 +46,10 @@ class Keyboard(Controls):
         return self.key(K_j)
 
     def x(self):
-        return self.key(K_k)
+        return self.key(K_k) or self.key(K_SPACE)
 
     def y(self):
-        return self.key(K_l)
+        return self.key(K_l) or self.key(K_q)
 
     # triggers
     def r(self):
@@ -62,20 +62,21 @@ class Keyboard(Controls):
         return False
 
     def zl(self):
-        return False
+        return (pygame.key.get_mods() & KMOD_LCTRL or
+                pygame.key.get_mods() & KMOD_LSHIFT)
 
     # dpad
     def down(self):
-        return False
+        return self.key(K_DOWN)
 
     def up(self):
-        return False
+        return self.key(K_UP)
 
     def right(self):
-        return False
+        return self.key(K_RIGHT)
 
     def left(self):
-        return False
+        return self.key(K_LEFT)
 
     # start buttons
     def home(self):

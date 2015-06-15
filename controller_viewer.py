@@ -43,18 +43,39 @@ class StickField(object):
         target.blit(self.point, self._point_top_left(joystick_axes))
 
 
-class ControllerViewer(App):
+class JoystickVisualizer(object):
+    """
+    TODO: rewrite as a mixin
+    or soemthing
+    """
+    def __init__(self, *args):
+        super(JoystickVisualizer, self).__init__(*args)
+        self.left_vis = StickField(add((265, 280), self.offset))
+        self.right_vis = StickField(add((1405, 280), self.offset))
+
+    def render(self):
+        super(JoystickVisualizer, self).render()
+        self.left_vis.render_to(self.screen, self.ctlr.left_stick())
+        self.right_vis.render_to(self.screen, self.ctlr.right_stick())
+
+
+class ButtonVisualizer(object):
+    def render(self):
+        super(ButtonVisualizer, self).render()
+        for button in self.ctlr.BUTTON_METHOD_NAMES:
+            if self.ctlr.invoke(button):
+                self.screen.blit(ASSET_DICT[button], self.offset)
+
+
+class ControllerViewer(JoystickVisualizer, ButtonVisualizer, App):
     """
     displays all the assets one at a time.
     use left and right arrow keys to seek through them.
     """
     def __init__(self, ctlr):
         super(ControllerViewer, self).__init__("Controller Viewer")
-
         self.bg = ASSET_DICT['gamepad']
         self.ctlr = ctlr
-        self.left_vis = StickField(add((265, 280), self.offset))
-        self.right_vis = StickField(add((1405, 280), self.offset))
 
     def handle_event(self, event):
         self.quit_if_needed(event)

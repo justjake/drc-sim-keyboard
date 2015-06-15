@@ -1,3 +1,6 @@
+from __future__ import print_function
+from functools import partial
+import sys
 """
 Abstract keybindings for drc-sim
 """
@@ -155,6 +158,42 @@ class Controls(object):
         override if you wish to handle events with your controller
         """
         pass
+
+
+class MethodMissing(object):
+    def method_missing(self, name, *args, **kwargs):
+        '''please implement'''
+        raise NotImplementedError('please implement a "method_missing" method')
+
+    def __getattr__(self, name):
+        if name == 'BUTTON_METHOD_NAMES':
+            return Controls.BUTTON_METHOD_NAMES
+        return partial(self.method_missing, name)
+
+
+
+class UnionController(MethodMissing):
+    def __init__(self, controllers):
+        self.controllers = controllers
+
+    def method_missing(self, name, *args, **kwargs):
+        if name == 'invoke':
+            return self.method_missing(args[0], *args[0:])
+
+        if name in ('left_stick', 'right_stick'):
+            total = (0, 0)
+            for ctlr in self.controllers:
+                total = add(total, ctlr.invoke(name))
+            return total
+
+        if name in self.controllers[0].BUTTON_METHOD_NAMES:
+            total = False
+            for ctlr in self.controllers:
+                total = total or ctlr.invoke(name)
+            return total
+
+        for ctlr in self.controllers:
+            getattr(ctlr, name)(*args, **kwargs)
 
 
 def build_response(controls):
