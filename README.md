@@ -37,6 +37,8 @@ gamepad screen as well while in CAPSLOCK or something.
    the Wii U.
 1. To make switching between the Gamepad and your computer easier, you can set
    your wireless adapter's MAC address to be that of your Gamepad.
+   I highly recommend doing this; reduces frustration with the connection
+   process a lot. Make the edit in `wpa_supplicant/start-wpa_supplicant.sh`.
 
 When you're finished, you should see something like this: [my hooray
 tweet](https://twitter.com/jitl/status/609875855112712193/photo/1)
