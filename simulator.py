@@ -439,28 +439,6 @@ class Simulator(App):
     def hid_snd(self):
         report = array.array('H', '\0\0' * 0x40)
         
-        button_mapping = {
-            0: 0x4000,  # a (mapped to wii u b)
-            1: 0x8000,  # b (mapped to wii u a)
-            2: 0x1000,  # x (mapped to wii u y)
-            3: 0x2000,  # y (mapped to wii u x)
-            4: 0x0020,  # l
-            5: 0x0010,  # r
-            6: 0x0004,  # back (minus)
-            7: 0x0008,  # start (plus)
-            8: 0x0002,  # xbox (home)
-            9: 0x08,    # l3 (goes in extra_buttons)
-            10: 0x04,   # r3 (goes in extra_buttons)
-            11: 0x800,  # l
-            12: 0x400,  # r
-            14: 0x100,  # d
-            13: 0x200,  # u
-        }
-        trigger_mapping = {
-            2: 0x0080,  # l
-            5: 0x0040   # r
-        }
-        
         # 16bit LE @ 0 seq_id
         # seems to be ignored
         report[0] = self.seq_id()
