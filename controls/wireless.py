@@ -91,15 +91,15 @@ class Xbox360Wireless(Controls):
     """
     def left_stick(self):
         return (
-                self.threshold(self.joy.get_axis(0)), 
-                self.threshold(self.joy.get_axis(1)) * -1
-                )
+            self.threshold(self.joy.get_axis(0)),
+            self.threshold(self.joy.get_axis(1)) * -1
+        )
 
     def right_stick(self):
         return (
-                self.threshold(self.joy.get_axis(3)), 
-                self.threshold(self.joy.get_axis(4)) * -1
-                    )
+            self.threshold(self.joy.get_axis(3)),
+            self.threshold(self.joy.get_axis(4)) * -1
+        )
 
     """
     should return a tuple (x, y, z) of acceleration, in (-1, 1).
