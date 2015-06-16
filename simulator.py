@@ -17,7 +17,8 @@ from controls.mouse import KeyboardMouse
 from assets import ASSET_DICT
 from controller_viewer import Visualizer
 
-JOYSTICK = False
+# JOYSTICK = False
+JOYSTICK = True
 EVT_SEND_HID = pygame.USEREVENT
 GAMEPAD_DIM = (854, 480)
 
@@ -519,7 +520,7 @@ class Simulator(App):
         self.screen.fill(15)
         self.screen.blit(self.bg, self.offset)
         self.vis.render(self.l_stick_prev, self.r_stick_prev)
-        self.screen.blit(self.vide_frame, self.vid_offset)
+        self.screen.blit(self.vid_frame, self.vid_offset)
 
         # this stuff came from the default event loop in drc-sim.py
         # TODO see if I'm mis-managing it somehow such that video never works
