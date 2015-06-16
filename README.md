@@ -36,9 +36,11 @@ gamepad screen as well while in CAPSLOCK or something.
 1. run `sudo dhclient $WLAN` to get an IP address for your connection from
    the Wii U.
 1. To make switching between the Gamepad and your computer easier, you can set
-   your wireless adapter's MAC address to be that of your Gamepad.
-   I highly recommend doing this; reduces frustration with the connection
-   process a lot. Make the edit in `wpa_supplicant/start-wpa_supplicant.sh`.
+   your wireless adapter's MAC address to be that of your Gamepad. I highly
+   recommend doing this; reduces frustration with the connection process a lot.
+   Make the edit in `wpa_supplicant/start-wpa_supplicant.sh`. You can narrow
+   down the list of MAC addresses by scanning only 5ghz and looking for
+   addresses prefixed with `18:2A` which both my DRC and Wii U share.
 
 When you're finished, you should see something like this: [my hooray
 tweet](https://twitter.com/jitl/status/609875855112712193/photo/1)
