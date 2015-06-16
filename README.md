@@ -10,6 +10,8 @@ DRC simulator work. all credit to the original authors.
 [@delroth_](https://twitter.com/delroth_) was a huge help with connecting to
 the Wii U with wpa_supplicant.
 
+[@maxb](https://twitter.com/@maxb) found my gamepad's MAC address for me :).
+
 ## Goals
 
 keyboard and mouse control for Wii U. Support mouse for "touch" input on the
