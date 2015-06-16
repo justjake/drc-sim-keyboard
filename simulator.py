@@ -159,12 +159,6 @@ class ServiceASTRM(ServiceBase):
                 s.is_streaming = True
 
 class ServiceVSTRM(ServiceBase):
-    # TODO rewrite so I can use in render()
-    dimensions = {
-        'camera' : (640, 480),
-        'gamepad' : (854, 480)
-    }
-    
     def __init__(s, decoder):
         super(ServiceVSTRM, s).__init__()
         s.decoder = decoder
@@ -250,7 +244,7 @@ class ServiceVSTRM(ServiceBase):
             s.decoder.display_frame(nals.tostring())
 
     def resize_output(s, (x, y)):
-        d = s.dimensions['gamepad']
+        d = GAMEPAD_DIM
         fit = pygame.Rect((0, 0), d).fit(pygame.display.get_surface().get_rect())
         s.decoder.update_dimensions(d, fit.size)
 
