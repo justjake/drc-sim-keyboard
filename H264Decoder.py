@@ -81,11 +81,12 @@ class H264Decoder:
         s.got_frame = s.ffi.new('int *')
         s.out_frame = s.ns.avcodec_alloc_frame()
 
-    def __init__(s, (in_x, in_y), (out_x, out_y)):
+    def __init__(s, (in_x, in_y), (out_x, out_y), output_surface):
         s.sws_context = None
         s.__init_ffi()
         s.__init_avcodec()
         s.update_dimensions((in_x, in_y), (out_x, out_y))
+        s.output_surface = output_surface
 
     def close(s):
         s.ns.sws_freeContext(s.sws_context)
@@ -140,6 +141,8 @@ class H264Decoder:
                 s.ffi.buffer(s.out_frame.data[0], s.out_frame.linesize[0] * s.out_y),
                 (s.out_x, s.out_y),
                 'RGB')
+            # I guess this is an extra copy...?
+            s.output_surface.blit(surface, (0, 0))
+            # prev implementation just wrote out to the main display and did the flip:
             # pygame.display.get_surface().blit(surface, (0, 0))
-            pygame.display.get_surface().blit(surface, (409, 247))
             # pygame.display.flip()
