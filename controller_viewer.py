@@ -43,31 +43,27 @@ class StickField(object):
         target.blit(self.point, self._point_top_left(joystick_axes))
 
 
-class JoystickVisualizer(object):
+class Visualizer(object):
     """
-    TODO: rewrite as a mixin
-    or soemthing
+    instantiate with an app
+    call render() in your app's render method after fetching the stick
+    values.
     """
-    def __init__(self, *args):
-        super(JoystickVisualizer, self).__init__(*args)
-        self.left_vis = StickField(add((265, 280), self.offset))
-        self.right_vis = StickField(add((1405, 280), self.offset))
+    def __init__(self, app):
+        self.app = app
+        self.left_vis = StickField(add((265, 280), app.offset))
+        self.right_vis = StickField(add((1405, 280), app.offset))
 
-    def render(self):
-        super(JoystickVisualizer, self).render()
-        self.left_vis.render_to(self.screen, self.ctlr.left_stick())
-        self.right_vis.render_to(self.screen, self.ctlr.right_stick())
+    def render(self, left_stick, right_stick):
+        self.left_vis.render_to(self.app.screen, left_stick)
+        self.right_vis.render_to(self.app.screen, right_stick)
 
-
-class ButtonVisualizer(object):
-    def render(self):
-        super(ButtonVisualizer, self).render()
-        for button in self.ctlr.BUTTON_METHOD_NAMES:
-            if self.ctlr.invoke(button):
-                self.screen.blit(ASSET_DICT[button], self.offset)
+        for button in self.app.ctlr.BUTTON_METHOD_NAMES:
+            if self.app.ctlr.invoke(button):
+                self.app.screen.blit(ASSET_DICT[button], self.app.offset)
 
 
-class ControllerViewer(JoystickVisualizer, ButtonVisualizer, App):
+class ControllerViewer(App):
     """
     displays all the assets one at a time.
     use left and right arrow keys to seek through them.
@@ -76,24 +72,28 @@ class ControllerViewer(JoystickVisualizer, ButtonVisualizer, App):
         super(ControllerViewer, self).__init__("Controller Viewer")
         self.bg = ASSET_DICT['gamepad']
         self.ctlr = ctlr
+        self.vis = Visualizer(self)
 
     def handle_event(self, event):
         self.quit_if_needed(event)
         self.ctlr.handle_event(event)
 
+        if event.type == KEYDOWN:
+            if event.key == K_BACKQUOTE:
+                print('BACKQUOTE down')
+
+        if event.type == KEYUP:
+            if event.key == K_BACKQUOTE:
+                print('K_BACKQUOTE up')
+
     def render(self):
         self.screen.fill((44, 44, 44))
-        super(ControllerViewer, self).render()
         self.screen.blit(self.bg, self.offset)
 
-        for button in self.ctlr.BUTTON_METHOD_NAMES:
-            if self.ctlr.invoke(button):
-                self.screen.blit(ASSET_DICT[button], self.offset)
+        left_stick = self.ctlr.left_stick()
+        right_stick = self.ctlr.right_stick()
 
-        self.left_vis.render_to(self.screen, self.ctlr.left_stick())
-        self.right_vis.render_to(self.screen, self.ctlr.right_stick())
-        # print('left_stick', self.ctlr.left_stick())
-        # print('right_stick', self.ctlr.right_stick())
+        self.vis.render(left_stick, right_stick)
 
 if __name__ == '__main__':
     ControllerViewer(KeyboardMouse()).main()
