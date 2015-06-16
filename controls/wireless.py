@@ -80,7 +80,7 @@ class Xbox360Wireless(Controls):
         return False
 
     def threshold(self, stick_axis):
-        if stick_axis < 0.2:
+        if abs(stick_axis) < 0.2:
             return 0.0
         return stick_axis
 
