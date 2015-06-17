@@ -2,6 +2,7 @@ import pygame
 from pygame.locals import *
 from base import add, scale
 from keyboard import Keyboard
+from ..util import log  # TODO switch to absolute paths
 
 
 TOGGLE_LOCK_KEY = K_BACKQUOTE
@@ -27,7 +28,8 @@ class MouseJoystick(object):
         """
         dx, dy = pygame.mouse.get_rel()
         if abs(dx) > 0 or abs(dy) > 0:
-            print("pygame mouse movement", dx, dy)
+            log("pygame mouse movement: ({dx}, {dy})".format(dx=dx, dy=dy),
+                'MOUSE')
 
         return (self.convert_x_axis(dx), self.convert_y_axis(dy))
 
