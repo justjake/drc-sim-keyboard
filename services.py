@@ -150,7 +150,7 @@ class ServiceASTRM(ServiceBase):
                 s.stream.close()
                 s.is_streaming = False
 
-            if s.is_streamiis == False:
+            if s.is_streaming == False:
                 s.stream = s.p.open(
                     format=pyaudio.paInt16,
                     channels=2,
