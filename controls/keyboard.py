@@ -40,7 +40,7 @@ class Keyboard(Controls):
 
     # face buttons
     def a(self):
-        return self.key(K_h)
+        return self.key(K_h) or self.key(K_RETURN)
 
     def b(self):
         return self.key(K_j)
