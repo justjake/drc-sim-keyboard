@@ -2,10 +2,34 @@ import pygame
 from pygame.locals import *
 from base import add, scale
 from keyboard import Keyboard
-from ..util import log  # TODO switch to absolute paths
+from util import log  # TODO switch to absolute paths
 
 
 TOGGLE_LOCK_KEY = K_BACKQUOTE
+# lag high-magnitude movements another frame
+ENABLE_LAG = True
+ENABLE_DOUBLE_LAG = True
+MAX_MOVEMENT = 50.0
+
+
+def lag(final, prev):
+    """
+    returns final_value, new_value_of_prev
+    """
+    # TO DO: do first divivative and check the subtraction of one vector
+    # from another to make sure they're going the same direction?
+
+    # TO DO: switch joystick magnitude measuring to polar-coordiate vectors
+    # and mreasure magnitude of both axes at once
+    if ENABLE_LAG and abs(prev) > 0.8 > abs(final):
+            # swap em. we'll play this frame again to smooth the falloff
+            # and we get a bonus frame of high-magnitude movement
+            log('lagged {prev} again instead of {final}'.format(prev=prev, final=final), 'MOUSE')
+            if ENABLE_DOUBLE_LAG:
+                diff = prev - final
+                return (prev, 0.6 * diff + final)
+            return (prev, final)
+    return (final, final)
 
 
 class MouseJoystick(object):
@@ -13,13 +37,17 @@ class MouseJoystick(object):
         # always added to the "max" movement
         self.sensitivity = 0
         self.sensitivity_incr = 10
-        self.max = 60.0
+        self.max = MAX_MOVEMENT
         # this is really weird. blame VirtualBox?
         # self.max_locked = 25000.0
-        
+
         # set to the more reasonable 100.0 because most people aren't running
         # their simulator in VirtualBox
         self.max_locked = self.max
+        self._prev_x = 0.0
+        self._prev_y = 0.0
+        log('remember to disable mouse acceleration in your desktop',
+            'MOUSE')
 
     # core interface up front
     def get(self):
@@ -34,10 +62,18 @@ class MouseJoystick(object):
         return (self.convert_x_axis(dx), self.convert_y_axis(dy))
 
     def convert_x_axis(self, dx):
-        return self.convert_axis(dx)
+        final, self._prev_x = lag(self.convert_axis(dx), self._prev_x)
+        return final
 
     def convert_y_axis(self, dy):
-        return self.convert_axis(dy) * -1
+        final, self._prev_y = lag(self.convert_axis(dy) * -1, self._prev_y)
+        return final
+
+    def get_max(self):
+        maximum = self.max + self.sensitivity
+        if pygame.event.get_grab():
+            maximum = self.max_locked + self.sensitivity
+        return max(maximum, 1)
 
     def convert_axis(self, d):
         """
@@ -51,15 +87,12 @@ class MouseJoystick(object):
         direction = d/magnitude
 
         # linear conversion.
-        maximum = self.max
-        if pygame.event.get_grab():
-            maximum = self.max_locked
 
         scaled = scale(
             float(abs(d)),                       # value
             0.0,                                 # old min
-            float(maximum + self.sensitivity),   # old max
-            0.1,                                 # new min -- escape deadzone
+            float(self.get_max()),               # old max
+            0.06,                                # new min -- escape deadzone
             1.0                                  # new max
         )
 
@@ -67,7 +100,10 @@ class MouseJoystick(object):
         scaled = max(min(1.0, scaled), 0.0)
 
         # re-apply the sign
-        return scaled * direction
+        final = scaled * direction
+
+
+        return final
 
     def handle_event(self, event):
         """
@@ -84,11 +120,13 @@ class MouseJoystick(object):
                     self.lock()
 
             if is_locked:
-                if event.key == K_LEFT:
+                if event.key == K_COMMA:
                     self.sensitivity -= self.sensitivity_incr
+                    log('[-] set sensitivity to {s}, delta_max is {max} (lower = more sensitive)'.format(s=self.sensitivity, max=self.get_max()), 'MOUSE')
 
-                if event.key == K_RIGHT:
+                if event.key == K_PERIOD:
                     self.sensitivity += self.sensitivity_incr
+                    log('[+] set sensitivity to {s}, delta_max is {max} (lower = more sensitive)'.format(s=self.sensitivity, max=self.get_max()), 'MOUSE')
 
     def lock(self):
         """
