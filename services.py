@@ -179,8 +179,19 @@ class ServiceVSTRM(ServiceBase):
             construct.BitField('timestamp', 32)
         )
         s.frame = array.array('B')
+        s._is_streaming = False
         s.is_streaming = False
         s.frame_decode_num = 0
+
+    @property
+    def is_streaming(self):
+        return self._is_streaming
+
+    @is_streaming.setter
+    def is_streaming(self, streaming):
+        self._is_streaming = streaming
+        log('is_streaming = {streaming}'.format(streaming=streaming),
+            'VSTRM')
 
     def close(s):
         s.decoder.close()
