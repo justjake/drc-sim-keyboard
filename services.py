@@ -15,7 +15,17 @@ def service_addend(ip):
 
 def udp_service(ip, port):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.bind((ip, port + service_addend(ip)))
+    actual_port = port + service_addend(ip)
+    try:
+        sock.bind((ip, actual_port))
+    except:
+        log("couldn't bind {ip}:{port}".format(ip=ip, port=actual_port),
+            "NETWORK")
+        log("trying {ip}:{port} instead".format(
+            ip='0.0.0.0',
+            port=actual_port),
+            "NETWORK")
+        sock.bind(('0.0.0.0', actual_port))
     return sock
 
 PORT_MSG = 50010
@@ -25,6 +35,7 @@ PORT_HID = 50022
 PORT_CMD = 50023
 
 # hack for now, replace with dhcp result
+# Perhaps switch to '0.0.0.0' by default
 LOCAL_IP = '192.168.1.11'
 
 MSG_S = udp_service(LOCAL_IP, PORT_MSG)
