@@ -18,7 +18,6 @@ from util import log, GAMEPAD_DIM
 
 
 # JOYSTICK = False
-JOYSTICK = True
 EVT_SEND_HID = pygame.USEREVENT
 
 
@@ -43,17 +42,19 @@ class Simulator(App):
         self.vid_rect = pygame.Rect(self.vid_offset, GAMEPAD_DIM)
         self.bg = ASSET_DICT['gamepad']
 
-        controllers = []
+        # all the controlers we want to use to control this gamepad
+        # controllers' inputs will be OR'd together.
+        # Makes it easy to get things done with the "mature" 360 controller
+        # driver and use the Mouse + Keyboard when you need 'em.
+        controllers = [KeyboardMouse()]
 
-        if JOYSTICK:
-            # set up joystick
-            pygame.joystick.init()
+        # detect joystick and assume it's a wireless 360 controller.
+        if pygame.joystick.get_count() > 0:
             joystick = pygame.joystick.Joystick(0)
             joystick.init()
             # self.ctlr = Xbox360Wireless(joystick)
             controllers.append(ProMap360(joystick))
 
-        controllers.append(KeyboardMouse())
         self.ctlr = UnionController(controllers)
 
         self.decoder = H264Decoder(
