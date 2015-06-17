@@ -1,5 +1,6 @@
 import pygame
 from assets import ASSET_DICT, load_all_assets
+from util import log
 
 
 class ExitMain(StandardError):
@@ -39,8 +40,9 @@ class App(object):
              BORDER_H + max_h + BORDER_H)
         )
 
-        print("width", screen.get_width())
-        print("height", screen.get_height())
+        log('calculated window size ({width}, {height}) from {count} assets'.format(
+            width=screen.get_width(), height=screen.get_height(), count=len(asset_names)),
+            'APP')
 
         self.screen = screen
         self.offset = (BORDER_W, BORDER_H)
