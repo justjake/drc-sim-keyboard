@@ -1,9 +1,10 @@
 from __future__ import print_function
 from functools import partial
-import sys
+from util import log
 """
 Abstract keybindings for drc-sim
 """
+TINY_BUT_NON_ZERO_NUMBER = 0.0000001
 BUTTONS = {
     'SYNC': 0x0001,
     'HOME': 0x0002,
@@ -171,7 +172,6 @@ class MethodMissing(object):
         return partial(self.method_missing, name)
 
 
-
 class UnionController(MethodMissing):
     def __init__(self, controllers):
         self.controllers = controllers
@@ -201,8 +201,12 @@ def build_response(controls):
 
 
 def scale(OldValue, OldMin, OldMax, NewMin, NewMax):
+    divisor = OldMax - OldMin
+    if divisor == 0:
+        divisor = TINY_BUT_NON_ZERO_NUMBER  # a tiny but non-zero number
+        log('avoided division by zero through trickery', 'base-scale')
     return (((OldValue - OldMin) * (NewMax - NewMin)) /
-            (OldMax - OldMin) + NewMin)
+            (divisor) + NewMin)
 
 
 def add(point_a, point_b):
