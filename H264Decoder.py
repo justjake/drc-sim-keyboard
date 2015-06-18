@@ -1,7 +1,5 @@
-import cffi
 from cffi import FFI
 import pygame
-from util import log
 
 # TODO static alloc in_data and make interface for reading/writing directly to it
 #   remove array.array usage of calling code
@@ -19,7 +17,7 @@ class H264Decoder:
             struct AVPacket { ...; uint8_t *data; int size; ...; };
             void av_init_packet(struct AVPacket *pkt);
             
-            enum AVCodecID { AV_CODEC_ID_H264, ... };
+            enum AVCodecID { CODEC_ID_H264, ... };
             struct AVCodec *avcodec_find_decoder(enum AVCodecID id);
 
             struct AVCodecContext *avcodec_alloc_context3(struct AVCodec *codec);
@@ -28,7 +26,7 @@ class H264Decoder:
                             struct AVDictionary **options);
             
             struct AVFrame { uint8_t *data[8]; int linesize[8]; ...; int key_frame; ...; };
-            struct AVFrame *av_frame_alloc(void);
+            struct AVFrame *avcodec_alloc_frame(void);
             
             int avcodec_decode_video2(struct AVCodecContext *avctx, struct AVFrame *picture,
                                     int *got_picture_ptr, struct AVPacket *avpkt);
@@ -69,7 +67,7 @@ class H264Decoder:
         s.av_packet = s.ffi.new('struct AVPacket *')
         s.ns.av_init_packet(s.av_packet)
 
-        s.codec = s.ns.avcodec_find_decoder(s.ns.AV_CODEC_ID_H264)
+        s.codec = s.ns.avcodec_find_decoder(s.ns.CODEC_ID_H264)
         if not s.codec:
             raise Exception('avcodec_alloc_context3')
         s.context = s.ns.avcodec_alloc_context3(s.codec)
@@ -77,21 +75,16 @@ class H264Decoder:
             raise Exception('avcodec_alloc_context3')
         if s.ns.avcodec_open2(s.context, s.codec, s.ffi.NULL) < 0:
             raise Exception('avcodec_open2')
-        s.frame = s.ns.av_frame_alloc()
+        s.frame = s.ns.avcodec_alloc_frame()
         if not s.frame:
-            raise Exception('av_frame_alloc')
+            raise Exception('avcodec_alloc_frame')
         s.got_frame = s.ffi.new('int *')
-        s.out_frame = s.ns.av_frame_alloc()
+        s.out_frame = s.ns.avcodec_alloc_frame()
 
     def __init__(s, (in_x, in_y), (out_x, out_y), output_surface):
         s.sws_context = None
-        try:
-            s.__init_ffi()
-            s.__init_avcodec()
-        except cffi.ffiplatform.VerificationError:
-            log('FATAL C FFI COMPILATION ERROR', 'H264')
-            log('make sure you have libavcodec-dev and libswscale-dev', 'H264')
-            exit(1)
+        s.__init_ffi()
+        s.__init_avcodec()
         s.update_dimensions((in_x, in_y), (out_x, out_y))
         s.output_surface = output_surface
 
@@ -135,7 +128,7 @@ class H264Decoder:
         elif length != s.av_packet.size:
             raise Exception('expected to decode a single complete frame')
         elif s.got_frame[0]:
-            log('keyframe {key}'.format(key=s.frame.key_frame), 'H264')
+            #print 'keyframe:', s.frame.key_frame
             # convert from YUV to RGB
             out_height = s.ns.sws_scale(
                 s.sws_context,
