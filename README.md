@@ -22,6 +22,15 @@ gamepad screen as well while in CAPSLOCK or something.
 1. get an rt2800usb with 5ghz support.
 1. follow some of the steps described in [this blog post][1] to pair your box with a Wii U.
   1. Do the "Preparations" sectio n
+    - If you need to prevent NetworkManager from screwing wit yo
+      shizz, you can stick something like this in
+      `/etc/NetworkManager/NetworkManager.conf`:
+
+    ```
+    [keyfile]
+    unmanaged-devices=mac:<YOUR ADAPTER MAC Addr HERE>
+    ```
+
   1. Skip the "mac80211 stack" section! That's for libdrc, not drc-sim.
   1. Do everything in the "Obtaining the key" step.
     - the two scripts in this repo can be useful with a bit of customization.
