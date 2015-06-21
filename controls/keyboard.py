@@ -43,7 +43,7 @@ class Keyboard(Controls):
         return self.key(K_h) or self.key(K_RETURN)
 
     def b(self):
-        return self.key(K_j)
+        return self.key(K_j) or self.key(K_BACKSPACE)
 
     def x(self):
         return self.key(K_k) or self.key(K_SPACE)
@@ -83,14 +83,14 @@ class Keyboard(Controls):
         return False
 
     def minus(self):
-        return False
+        return self.key(K_MINUS)
 
     def plus(self):
-        return False
+        return self.key(K_EQUALS)
 
     # joystick presses
     def r3(self):
-        return False
+        return self.key(K_e)
 
     def l3(self):
         return False

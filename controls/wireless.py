@@ -70,10 +70,11 @@ class Xbox360Wireless(Controls):
 
     # extra buttons - joystick presses
     def r3(self):
-        return False
+        return self.joy.get_button(10)
 
     def l3(self):
-        return False
+        return self.joy.get_button(9)
+
 
     # the 'TV' button. Unsure of utility of implementing this.
     def tv(self):

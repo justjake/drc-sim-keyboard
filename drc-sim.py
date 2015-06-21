@@ -6,6 +6,8 @@ import array
 import pygame
 import time
 from H264Decoder import H264Decoder
+from util import log
+# from IPython.Shell import IPShellEmbed
 
 pygame.init()
 pygame.display.set_mode([854, 480], pygame.RESIZABLE)
@@ -125,14 +127,14 @@ class ServiceASTRM(ServiceBase):
         if h.packet_type == 0:
             seq_ok = s.update_seq_id(h.seq_id)
             if not seq_ok:
-                print 'astrm bad seq_id'
+                log('astrm bad seq_id')
             if h.fmt != 1 or h.channel != 0:
                 raise Exception('astrm currently only handles 48kHz PCM stereo')
             if len(packet) != 8 + h.payload_size:
                 raise Exception('astrm bad payload_size')
             
             if h.vibrate:
-                print '*vibrate*'
+                log('*vibrate*')
             
             s.pa_ring[s.pa_rpos] = array.array('H', packet[8:])
             s.pa_rpos += 1
@@ -306,18 +308,18 @@ class ServiceCMD(ServiceBase):
         s.send_response_cmd0(h, r)
 
     def cmd0(s, h, packet):
-        print 'CMD0:%i:%i' % (h.id_primary, h.id_secondary)
+        log('CMD0:%i:%i' % (h.id_primary, h.id_secondary))
         if h.id_primary not in s.cmd0_handlers or h.id_secondary not in s.cmd0_handlers[h.id_primary]:
-            print 'unhandled', packet.encode('hex')
+            log('unhandled', packet.encode('hex'))
             return
         s.cmd0_handlers[h.id_primary][h.id_secondary](h, packet)
 
     def cmd1(s, h, packet):
-        print 'CMD1', packet[8:].encode('hex')
+        log('CMD1', packet[8:].encode('hex'))
         s.send_response(h, '\x00\x16\x00\x19\x9e\x00\x00\x00\x40\x00\x40\x00\x00\x00\x01\xff')
 
     def cmd2(s, h, packet):
-        print 'TIME base {:04x} seconds {:08x}'.format(h.JDN_base, h.seconds)
+        log('TIME base {:04x} seconds {:08x}'.format(h.JDN_base, h.seconds))
         s.send_response(h)
 
     def ack(s, h):
@@ -356,13 +358,13 @@ class ServiceCMD(ServiceBase):
         h = s.header.parse(packet)
         # don't track acks from the console for now
         if h.packet_type in (s.PT_REQ, s.PT_RESP):
-            #print 'CMD', packet.encode('hex')
+            #log('CMD', packet.encode('hex'))
             s.ack(h)
             s.cmd_handlers[h.cmd_id](h, packet)
 
 class ServiceMSG(ServiceBase):
     def update(s, packet):
-        print 'MSG', packet.encode('hex')
+        log('MSG', packet.encode('hex'))
 
 class ServiceNOP(ServiceBase):
     def update(s, packet):
@@ -454,7 +456,7 @@ def hid_snd():
                     scaled = scale_stick(orig, -1, 1, 900, 3200)
                 elif i in (1, 4):
                     scaled = scale_stick(orig, 1, -1, 900, 3200)
-            #print '%04i %04i %f' % (i, scaled, orig)
+            #log('%04i %04i %f' % (i, scaled, orig))
             stick_mapping = { 0 : 0, 1 : 1, 3 : 2, 4 : 3 }
             report[3 + stick_mapping[i]] = scaled
     report[1] = (button_bits >> 8) | ((button_bits & 0xff) << 8)
@@ -473,7 +475,6 @@ def hid_snd():
         x = scale_stick(point[0], 0, screen_x, 200, 3800)
         y = scale_stick(point[1], 0, screen_y, 200, 3800)
         z1 = 2000
-        
         for i in xrange(10):
             report[18 + i * 2 + 0] = 0x80 | x
             report[18 + i * 2 + 1] = 0x80 | y
@@ -501,12 +502,13 @@ def hid_snd():
     # i didn't want to move this up because I'm
     # worried its location here is important. TODO
     # think about it.
+    # special extra buttons
     for i in xrange(9,11):
         if joystick.get_button(i):
             report[40] |= button_mapping[i]
     
     report[0x3f] = 0xe000
-    #print report.tostring().encode('hex')
+    #log(report.tostring().encode('hex'))
     HID_S.sendto(report, ('192.168.1.10', PORT_HID))
     hid_seq_id = hid_seq_id + 1 % 65534 # prevent overflow
 

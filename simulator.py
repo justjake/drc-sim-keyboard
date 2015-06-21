@@ -38,6 +38,7 @@ class Simulator(App):
     def __init__(self):
         super(Simulator, self).__init__("DRC Simulator")
         self.vid_offset = (409, 247)
+        self.vid_offset = (0, 0)
         self.vid_frame = pygame.Surface(GAMEPAD_DIM)
         self.vid_rect = pygame.Rect(self.vid_offset, GAMEPAD_DIM)
         self.bg = ASSET_DICT['gamepad']
@@ -59,14 +60,14 @@ class Simulator(App):
 
         self.decoder = H264Decoder(
             GAMEPAD_DIM,
-            GAMEPAD_DIM,
+            GAMEPAD_DIM)
             # pygame.display.get_surface().get_size(),
-            self.vid_frame)
+            #self.vid_frame)
 
         self.service_handlers = {
             services.MSG_S: services.ServiceMSG(),
             services.VID_S: services.ServiceVSTRM(self.decoder),
-            services.AUD_S: services.ServiceASTRM(),
+            # services.AUD_S: services.ServiceASTRM(),
             services.CMD_S: services.ServiceCMD()
         }
 
@@ -120,11 +121,11 @@ class Simulator(App):
         if (pygame.mouse.get_pressed()[0] and 
                 not pygame.event.get_grab() and
                 # mouse was over the "screen" when clicked
-                self.vid_rect.collidepoint(self.mouse.get_pos())):
+                self.vid_rect.collidepoint(pygame.mouse.get_pos())):
             point = pygame.mouse.get_pos()
             in_x = point[0] - self.vid_offset[0]
             in_y = point[1] - self.vid_offset[1]
-            log('touchscreen click at {x, y}'.format(x, y), 'HID')
+            log('touchscreen click at ({x}, {y})'.format(x=in_x, y=in_y), 'HID')
             x = int(scale(point[0], self.vid_rect.left, self.vid_rect.right, 200, 3800))
             y = int(scale(point[1], self.vid_rect.top, self.vid_rect.bottom, 200, 3800))
             z1 = 2000
@@ -157,6 +158,7 @@ class Simulator(App):
         # worried its location here is important. TODO
         # think about it.
         report[40] |= extra_button_mask(self.ctlr)
+        # log('report 40 = {n}'.format(n=report[40]))
         
         report[0x3f] = 0xe000
         #print report.tostring().encode('hex')
@@ -169,16 +171,19 @@ class Simulator(App):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_BACKSLASH:
                 # TODO: What message is this?
+                # it has to do with video service and expected seq id failures
+                log('SENDING \1\0\0\0 ON YOUR COMMAND!')
                 services.MSG_S.sendto('\1\0\0\0', ('192.168.1.10', services.PORT_MSG))
 
         elif event.type == EVT_SEND_HID:
             self.hid_snd()
 
     def render(self):
-        self.screen.fill(15)
-        self.screen.blit(self.bg, self.offset)
-        self.vis.render(self.l_stick_prev, self.r_stick_prev)
-        self.screen.blit(self.vid_frame, self.vid_offset)
+        #self.screen.fill(15)
+        #self.screen.blit(self.bg, self.offset)
+        #self.vis.render(self.l_stick_prev, self.r_stick_prev)
+        #self.screen.blit(self.vid_frame, self.vid_offset)
+        #pygame.display.flip()
 
         # this stuff came from the default event loop in drc-sim.py
         # TODO see if I'm mis-managing it somehow such that video never works
@@ -197,4 +202,6 @@ class Simulator(App):
 
 if __name__ == '__main__':
     app = Simulator()
-    app.main()
+    while True:
+        app.handle_all_events()
+        app.render()

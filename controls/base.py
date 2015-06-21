@@ -24,11 +24,10 @@ BUTTONS = {
     'A': 0x8000
 }
 
-EXTRA_BOTTOMS = {
-    'L3': 0x08,
-    'R3': 0x04,
+EXTRA_BUTTONS = {
+    'R3': 0x40,
+    'L3': 0x80,
 }
-
 
 def button_mask(controls):
     """
@@ -44,9 +43,11 @@ def button_mask(controls):
 
 def extra_button_mask(controls):
     mask = 0
-    for button_name, button_mask in EXTRA_BOTTOMS.iteritems():
+    for button_name, button_mask in EXTRA_BUTTONS.iteritems():
         if controls.invoke(button_name.lower()):
             mask |= button_mask
+            #log('wow special button {b} clicked and invoked! new mask {m}'.format(
+                #b=button_name, m=mask), 'FUGGIN BUTTANS')
     return mask
 
 

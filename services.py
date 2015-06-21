@@ -3,8 +3,16 @@ import construct
 import socket
 import pyaudio
 import pygame
-from util import log, GAMEPAD_DIM
+from util import (
+        log,
+        GAMEPAD_DIM,
+        )
+from H264Decoder import H264Decoder
 
+#def log(foo, name='bar'):
+    #pass
+
+FALLBACK_IP = '127.0.0.1'
 
 def service_addend(ip):
     if int(ip.split('.')[3]) == 10:
@@ -22,10 +30,10 @@ def udp_service(ip, port):
         log("couldn't bind {ip}:{port}".format(ip=ip, port=actual_port),
             "NETWORK")
         log("trying {ip}:{port} instead".format(
-            ip='0.0.0.0',
+            ip=FALLBACK_IP,
             port=actual_port),
             "NETWORK")
-        sock.bind(('0.0.0.0', actual_port))
+        sock.bind((FALLBACK_IP, actual_port))
     return sock
 
 PORT_MSG = 50010
@@ -53,8 +61,16 @@ class ServiceBase(object):
         ret = True
         if s.seq_id_expect is None:
             s.seq_id_expect = seq_id
-        elif s.seq_id_expect != seq_id:
+
+        if s.seq_id_expect != seq_id:
+            #log("[BAD] Got seq_id of " + str(seq_id) + ", expected " + str(s.seq_id_expect), 
+                #s.__class__.__name__)
             ret = False
+        else:
+            pass
+            #log("[good :)] Got seq_id of " + str(seq_id) + ", expected " + str(s.seq_id_expect), 
+                    #s.__class__.__name__)
+
         s.seq_id_expect = (seq_id + 1) & 0x3ff
         return ret
 
@@ -140,7 +156,7 @@ class ServiceASTRM(ServiceBase):
 
             if h.vibrate:
                 # TODO: play a tone! :)
-                log('******* vibrate ********, ''ASTRM')
+                log('******* vibrate ********', 'ASTRM')
 
             s.pa_ring[s.pa_rpos] = array.array('H', packet[8:])
             s.pa_rpos += 1
@@ -163,8 +179,9 @@ class ServiceASTRM(ServiceBase):
 
 
 class ServiceVSTRM(ServiceBase):
-    def __init__(s, decoder):
+    def __init__(s, decoder, msg_socket=None):
         super(ServiceVSTRM, s).__init__()
+        s.MSG_S = msg_socket or MSG_S
         s.decoder = decoder
         s.header = construct.BitStruct('VSTRMHeader',
             construct.Nibble('magic'),
@@ -249,7 +266,7 @@ class ServiceVSTRM(ServiceBase):
                     s.is_streaming = True
                 else:
                     # request a new IDR frame
-                    MSG_S.sendto('\1\0\0\0', ('192.168.1.10', PORT_MSG))
+                    s.MSG_S.sendto('\1\0\0\0', ('192.168.1.10', PORT_MSG))
                     return
         
         s.frame.fromstring(packet[16:])
@@ -323,12 +340,12 @@ class ServiceCMD(ServiceBase):
     def cmd0(s, h, packet):
         log('CMD0:%i:%i' % (h.id_primary, h.id_secondary), 'CMD')
         if h.id_primary not in s.cmd0_handlers or h.id_secondary not in s.cmd0_handlers[h.id_primary]:
-            log('unhandled', packet.encode('hex'), 'CMD')
+            log('unhandled {packet}'.format(packet=packet.encode('hex')), 'CMD')
             return
         s.cmd0_handlers[h.id_primary][h.id_secondary](h, packet)
 
     def cmd1(s, h, packet):
-        log('CMD1', packet[8:].encode('hex'), 'CMD')
+        log('CMD1: {packet}'.format(packet=packet[8:].encode('hex')), 'CMD')
         s.send_response(h, '\x00\x16\x00\x19\x9e\x00\x00\x00\x40\x00\x40\x00\x00\x00\x01\xff')
 
     def cmd2(s, h, packet):

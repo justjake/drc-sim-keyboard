@@ -9,6 +9,8 @@ class ExitMain(StandardError):
     """
     pass
 
+SURFACE_OPTS = 0 # pygame.FULLSCREEN | pygame.HWSURFACE
+SIZE = (854, 480)
 
 class App(object):
     """
@@ -18,7 +20,7 @@ class App(object):
     def __init__(self, title):
         pygame.init()
         pygame.display.set_caption(title)
-        pygame.display.set_mode((20, 20))
+        pygame.display.set_mode((20, 20), SURFACE_OPTS)
         load_all_assets()
         asset_names = ASSET_DICT.keys()
 
@@ -36,8 +38,8 @@ class App(object):
             if w > max_w:
                 max_w = w
         screen = pygame.display.set_mode(
-            (BORDER_W + max_w + BORDER_W,
-             BORDER_H + max_h + BORDER_H)
+            SIZE,
+            SURFACE_OPTS
         )
 
         log('calculated window size ({width}, {height}) from {count} assets'.format(

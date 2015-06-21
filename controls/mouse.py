@@ -5,6 +5,7 @@ from keyboard import Keyboard
 from util import log  # TODO switch to absolute paths
 
 
+JOYSTICK_MIN = 0.2
 TOGGLE_LOCK_KEY = K_BACKQUOTE
 # lag high-magnitude movements another frame
 ENABLE_LAG = True
@@ -55,9 +56,9 @@ class MouseJoystick(object):
         gets the joystick pairs
         """
         dx, dy = pygame.mouse.get_rel()
-        if abs(dx) > 0 or abs(dy) > 0:
-            log("pygame mouse movement: ({dx}, {dy})".format(dx=dx, dy=dy),
-                'MOUSE')
+        #if abs(dx) > 0 or abs(dy) > 0:
+            #log("pygame mouse movement: ({dx}, {dy})".format(dx=dx, dy=dy),
+                #'MOUSE')
 
         return (self.convert_x_axis(dx), self.convert_y_axis(dy))
 
@@ -92,7 +93,7 @@ class MouseJoystick(object):
             float(abs(d)),                       # value
             0.0,                                 # old min
             float(self.get_max()),               # old max
-            0.06,                                # new min -- escape deadzone
+            max(JOYSTICK_MIN, 0.0),              # new min -- escape deadzone
             1.0                                  # new max
         )
 
@@ -128,6 +129,9 @@ class MouseJoystick(object):
                     self.sensitivity += self.sensitivity_incr
                     log('[+] set sensitivity to {s}, delta_max is {max} (lower = more sensitive)'.format(s=self.sensitivity, max=self.get_max()), 'MOUSE')
 
+    def is_locked(self):
+        return pygame.event.get_grab()
+
     def lock(self):
         """
         locks the mouse to the window, enabling accurate readings
@@ -158,10 +162,13 @@ class KeyboardMouse(Keyboard):
         self.mouse.handle_event(event)
 
     def r(self):
-        return pygame.mouse.get_pressed()[2]
+        if self.mouse.is_locked():
+            return pygame.mouse.get_pressed()[2]
 
     def zr(self):
-        return pygame.mouse.get_pressed()[0]
+        if self.mouse.is_locked():
+            return pygame.mouse.get_pressed()[0]
 
     def r3(self):
-        return pygame.mouse.get_pressed()[1]
+        if self.mouse.is_locked():
+            return pygame.mouse.get_pressed()[1]
