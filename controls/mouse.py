@@ -5,12 +5,14 @@ from keyboard import Keyboard
 from util import log  # TODO switch to absolute paths
 
 
-JOYSTICK_MIN = 0.2
+JOYSTICK_MIN = 0.17
 TOGGLE_LOCK_KEY = K_BACKQUOTE
 # lag high-magnitude movements another frame
 ENABLE_LAG = True
-ENABLE_DOUBLE_LAG = True
+ENABLE_DOUBLE_LAG = False
 MAX_MOVEMENT = 50.0
+LAG_WHEN_LESS_THAN = 0.1
+LAG_WHEN_GREATER_THAN = 0.8
 
 
 def lag(final, prev):
@@ -22,7 +24,10 @@ def lag(final, prev):
 
     # TO DO: switch joystick magnitude measuring to polar-coordiate vectors
     # and mreasure magnitude of both axes at once
-    if ENABLE_LAG and abs(prev) > 0.8 > abs(final):
+    if ENABLE_LAG and (
+            abs(prev) > LAG_WHEN_GREATER_THAN
+            and abs(final) < LAG_WHEN_LESS_THAN):
+
             # swap em. we'll play this frame again to smooth the falloff
             # and we get a bonus frame of high-magnitude movement
             log('lagged {prev} again instead of {final}'.format(prev=prev, final=final), 'MOUSE')

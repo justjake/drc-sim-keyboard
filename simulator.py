@@ -108,6 +108,25 @@ class Simulator(App):
         report[3 + 3] = wiiu_axis(r_vert)
 
         report[1] = (button_bits >> 8) | ((button_bits & 0xff) << 8)
+
+# 0   u16 seq_id;
+# 1   u16 buttons;  // see ButtonsMask
+# 2   u8 power_status;  // see PowerStatusMask
+#     u8 battery_charge;
+# 3   u16 left_stick_x;
+# 4   u16 left_stick_y;
+# 5   u16 right_stick_x;
+# 6   u16 right_stick_y;
+# 7   u8 audio_volume;
+# 7.5 AccelerometerData accelerometer; // FUCK
+#     GyroscopeData gyro;
+#     MagnetData magnet;
+#     TouchscreenData touchscreen;
+#     char unk0[4];
+#     u8 extra_buttons;  // see ExtraButtonsMask
+#     char unk1[46];
+#     u8 fw_version_neg;  // ~fw_version
+
         
         # touchpanel crap @ 36 - 76
         byte_18 = 0
