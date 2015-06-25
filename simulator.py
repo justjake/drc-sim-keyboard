@@ -8,7 +8,7 @@ import services
 from H264Decoder import H264Decoder
 from app import App
 from controls.base import (
-    button_mask, extra_button_mask, UnionController, scale
+    button_mask, extra_button_mask, UnionController, scale, wiiu_axis
 )
 from controls.wireless import ProMap360
 from controls.mouse import KeyboardMouse
@@ -19,16 +19,6 @@ from util import log, GAMEPAD_DIM
 
 # JOYSTICK = False
 EVT_SEND_HID = pygame.USEREVENT
-
-
-def wiiu_axis(orig):
-    """
-    given a joystick axis motion, scale into Wii U space
-    """
-    if abs(orig) < 0.0001:
-        # unsure why this starts as this value 0x800
-        return 0x800
-    return int(scale(orig, -1, 1, 900, 3200))
 
 
 class Simulator(App):

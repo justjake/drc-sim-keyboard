@@ -6,21 +6,30 @@ see http://libdrc.org/docs/re/sc-input.html
 TODO tests
 """
 from construct import (
-        ULint8, 
-        ULint16, 
-        Array, 
-        Struct, 
-        BitStruct, 
-        BitField, 
-        Byte, 
-        SLInt16, 
-        Padding,
-        Rename
-        )
+    ULInt8, 
+    ULInt16, 
+    SLInt16, 
+    UBInt8, 
+    UBInt16, 
+    SBInt16, 
+    Array, 
+    Struct, 
+    BitStruct, 
+    BitField, 
+    Byte, 
+    Padding,
+    Rename,
+    Flag
+)
 
-u16 = ULint16
-s16 = SLInt16
-u8 = ULint8
+## turn on to make little-endian values
+# u16 = ULInt16
+# s16 = SLInt16
+# u8 = ULInt8
+
+u16 = UBInt16
+s16 = SBInt16
+u8 = UBInt8
 
 AccelerometerData = Struct("AccelerometerData",
         s16("x_accel"),
@@ -52,6 +61,24 @@ Point = Struct("Point", Array(2, BitStruct("Coordinate",
 
 TouchscreenData = Struct("TouchscreenData", Array(10, Point))
 
+Buttons = BitStruct("Buttons",
+                    Flag("a"),
+                    Flag("b"),
+                    Flag("x"),
+                    Flag("y"),
+                    Flag("left"),
+                    Flag("right"),
+                    Flag("up"),
+                    Flag("down"),
+                    Flag("zl"),
+                    Flag("zr"),
+                    Flag("l"),
+                    Flag("r"),
+                    Flag("plus"),
+                    Flag("minus"),
+                    Flag("home"),
+                    Flag("sync"),)
+
 # the real shebang
 InputData = Struct("InputData",
         u16("seq_id"),
@@ -69,4 +96,4 @@ InputData = Struct("InputData",
         Array(4, Byte("unkown0")),
         u8("extra_buttons"),
         Array(46, Byte("unknown1")),
-        u8("fw_version_neg")) # ~fw_version
+        u8("fw_version_neg")) # u~fw_version

@@ -29,6 +29,31 @@ EXTRA_BUTTONS = {
     'L3': 0x80,
 }
 
+
+def inspect_mask(integer, bits=8, byte=8):
+    """
+    print a value as a bits. printing in byte-sized blocks
+
+    >>> bits(255)
+    '11111111'
+
+    >>> bits(256)
+    '00000001 00000000'
+    """
+    as_bin = bin(integer)[2:]
+    if len(as_bin) < bits:
+        missing_bits = bits - len(as_bin)
+        as_bin = '0' * missing_bits + as_bin
+
+    return ' '.join(chunks(as_bin, byte))
+
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
+
 def button_mask(controls):
     """
     Given controls, a `Controls` instance, compute the bitmask of all pressed
@@ -155,11 +180,21 @@ class Controls(object):
     def gyroscope(self):
         return (0, 0, 0)
 
+    """
+    should return a tuple (x, y, force) of a touch location.
+    force should be a float between 0 and 1.
+
+    return None if there is no touch.
+    """
+    def touch(self):
+        return None
+
     def handle_event(self, event):
         """
         override if you wish to handle events with your controller
-        """
-        pass
+        """ pass
+
+
 
 
 class MethodMissing(object):
@@ -212,3 +247,17 @@ def scale(OldValue, OldMin, OldMax, NewMin, NewMax):
 
 def add(point_a, point_b):
     return (point_a[0] + point_b[0], point_a[1] + point_b[1])
+
+
+def wiiu_axis(orig):
+    """
+    given a joystick axis motion, scale into Wii U space
+    """
+    if abs(orig) < 0.0001:
+        # unsure why this starts as this value 0x800
+        return 0x800
+    return int(scale(orig, -1, 1, 900, 3200))
+
+###
+# TODO: move control value constructors to new file
+###
